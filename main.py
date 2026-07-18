@@ -8,21 +8,20 @@ import uvicorn
 # 1. API Anahtarı Yapılandırması
 api_key = os.environ.get("GEMINI_API_KEY")
 if not api_key:
-    # Test için buraya kendi anahtarını yazabilirsin
     api_key = "SENIN_GEMINI_API_KEY_BURAYA_GELECEK"
 
 genai.configure(api_key=api_key)
 
-# Arkeoloji Uzmanı Yapay Zeka Modeli
-model = genai.GenerativeModel(
-    model_name="gemini-1.5-flash",
-    system_instruction=(
-        "Sen bir arkeoloji ve antik sembol uzmanısın. Kullanıcının gönderdiği görselleri bilimsel, "
-        "tarihi ve akademik olarak tanımla. Kesinlikle defineciliği, kazı yapmayı veya hazine aramayı "
-        "teşvik etme. Her cevabının sonuna mutlaka şu yasal uyarıyı ekle:\n"
-        "'UYARI: Bu görselin define veya hazine ile bir ilgisi olamaz. Tarihi eserlere zarar vermek suçtur, "
-        "lütfen en yakın müze müdürlüğüne başvurun.'"
-    )
+# Arkeoloji Uzmanı Yapay Zeka Modeli (Sadece modeli sade şekilde başlatıyoruz)
+model = genai.GenerativeModel('gemini-1.5-flash')
+
+# Sabit Yasal Uyarı Metnimiz
+SISTEM_TALIMATI = (
+    "Sen bir arkeoloji and antik sembol uzmanısın. Kullanıcının gönderdiği görselleri bilimsel, "
+    "tarihi ve akademik olarak tanımla. Kesinlikle defineciliği, kazı yapmayı veya hazine aramayı "
+    "teşvik etme. Her cevabının sonuna mutlaka şu yasal uyarıyı ekle:\n"
+    "'UYARI: Bu görselin define veya hazine ile bir ilgisi olamaz. Tarihi eserlere zarar vermek suçtur, "
+    "lütfen en yakın müze müdürlüğüne başvurun.'"
 )
 
 # FastAPI Uygulamasını Başlatıyoruz
@@ -37,8 +36,10 @@ async def api_isaret_analizi(file: UploadFile = File(...), soru: str = Form("Bu 
         # Gelen dosyayı geçici olarak aç ve PIL Image formatına dönüştür
         img = PIL.Image.open(file.file)
         
-        # Gemini ile analiz et
-        response = model.generate_content([soru, img])
+        # Talimatı ve soruyu birleştirip gönderiyoruz
+        tam_istek = f"{SISTEM_TALIMATI}\n\nKullanıcı Sorusu: {soru}"
+        response = model.generate_content([tam_istek, img])
+        
         return {"durum": "basarili", "sonuc": response.text}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Analiz hatası: {str(e)}")
@@ -53,7 +54,10 @@ async def api_antik_dil_ceviri(file: UploadFile = File(...)):
             "Bu görselde yer alan antik yazıları, sembolik harfleri tespit et. "
             "Hangi dilde/alfabede yazıldığını belirt ve Türkçe çevirisini/anlamını yap."
         )
-        response = model.generate_content([istek, img])
+        # Sistem talimatını buraya da ekliyoruz
+        tam_istek = f"{SISTEM_TALIMATI}\n\nİstek: {istek}"
+        response = model.generate_content([tam_istek, img])
+        
         return {"durum": "basarili", "sonuc": response.text}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Çeviri hatası: {str(e)}")
@@ -69,7 +73,10 @@ async def api_uydu_analizi(file: UploadFile = File(...)):
             "höyük, tümülüs benzeri tarihi olabilecek tepe formasyonlarını veya eski yol yataklarını "
             "bilimsel ve jeolojik olarak analiz et. Kesinlikle kazı tavsiyesi verme."
         )
-        response = model.generate_content([istek, img])
+        # Sistem talimatını buraya da ekliyoruz
+        tam_istek = f"{SISTEM_TALIMATI}\n\nİstek: {istek}"
+        response = model.generate_content([tam_istek, img])
+        
         return {"durum": "basarili", "sonuc": response.text}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Uydu analiz hatası: {str(e)}")
@@ -88,5 +95,4 @@ def ana_sayfa():
 
 # --- SUNUCUYU BAŞLATMA ---
 if __name__ == "__main__":
-    # Sunucuyu kendi bilgisayarımızda 8000 portunda başlatıyoruz
     uvicorn.run(app, host="0.0.0.0", port=8000)
