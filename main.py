@@ -12,13 +12,13 @@ if not api_key:
 
 genai.configure(api_key=api_key)
 
-# Arkeoloji Uzmanı Yapay Zeka Modeli (Sadece modeli sade şekilde başlatıyoruz)
-model = genai.GenerativeModel('gemini-1.5-flash')
+# Arkeoloji Uzmanı Yapay Zeka Modeli (Açık model yolu belirterek v1beta hatasını önlüyoruz)
+model = genai.GenerativeModel('models/gemini-1.5-flash')
 
 # Sabit Yasal Uyarı Metnimiz
 SISTEM_TALIMATI = (
     "Sen bir arkeoloji and antik sembol uzmanısın. Kullanıcının gönderdiği görselleri bilimsel, "
-    "tarihi ve akademik olarak tanımla. Kesinlikle defineciliği, kazı yapmayı veya hazine aramayı "
+    "tarihi and akademik olarak tanımla. Kesinlikle defineciliği, kazı yapmayı veya hazine aramayı "
     "teşvik etme. Her cevabının sonuna mutlaka şu yasal uyarıyı ekle:\n"
     "'UYARI: Bu görselin define veya hazine ile bir ilgisi olamaz. Tarihi eserlere zarar vermek suçtur, "
     "lütfen en yakın müze müdürlüğüne başvurun.'"
