@@ -10,6 +10,9 @@ api_key = os.environ.get("GEMINI_API_KEY")
 if not api_key:
     api_key = "SENIN_GEMINI_API_KEY_BURAYA_GELECEK"
 
+# Kütüphaneyi configure etmeden önce ve modeli başlatmadan önce v1 sürümünü kesin olarak zorluyoruz
+os.environ["GOOGLE_API_VERSION"] = "v1"
+
 genai.configure(api_key=api_key)
 
 # Arkeoloji Uzmanı Yapay Zeka Modeli (Açık model yolu belirterek v1beta hatasını önlüyoruz)
