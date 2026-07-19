@@ -1,8 +1,8 @@
 import os
 import google.generativeai as genai
+from google.generativeai import types
 import PIL.Image
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException
-from fastapi.responses import JSONResponse
 import uvicorn
 
 # 1. API Anahtarı Yapılandırması
@@ -10,13 +10,14 @@ api_key = os.environ.get("GEMINI_API_KEY")
 if not api_key:
     api_key = "SENIN_GEMINI_API_KEY_BURAYA_GELECEK"
 
-# Kütüphaneyi configure etmeden önce ve modeli başlatmadan önce v1 sürümünü kesin olarak zorluyoruz
-os.environ["GOOGLE_API_VERSION"] = "v1"
-
+# Kütüphaneyi configure ediyoruz
 genai.configure(api_key=api_key)
 
-# Arkeoloji Uzmanı Yapay Zeka Modeli (Açık model yolu belirterek v1beta hatasını önlüyoruz)
-model = genai.GenerativeModel('models/gemini-1.5-flash')
+# KESİN ÇÖZÜM: İnatçı v1beta hatasını ezmek için istemciyi (client) doğrudan v1 api sürümüne bağlıyoruz
+client = genai.GenerativeModel(
+    model_name='gemini-1.5-flash',
+    client=genai.client.get_default_generative_client(api_version='v1')
+)
 
 # Sabit Yasal Uyarı Metnimiz
 SISTEM_TALIMATI = (
@@ -36,12 +37,11 @@ app = FastAPI(title="Antik İşaret Analiz API", version="1.0")
 async def api_isaret_analizi(file: UploadFile = File(...), soru: str = Form("Bu işaret nedir ve ne anlama gelir?")):
     """Mobil uygulamadan gelen fotoğrafı alır ve işaret analizi yapar."""
     try:
-        # Gelen dosyayı geçici olarak aç ve PIL Image formatına dönüştür
         img = PIL.Image.open(file.file)
-        
-        # Talimatı ve soruyu birleştirip gönderiyoruz
         tam_istek = f"{SISTEM_TALIMATI}\n\nKullanıcı Sorusu: {soru}"
-        response = model.generate_content([tam_istek, img])
+        
+        # client nesnesi üzerinden doğrudan v1 çağrısı yapıyoruz
+        response = client.generate_content([tam_istek, img])
         
         return {"durum": "basarili", "sonuc": response.text}
     except Exception as e:
@@ -57,9 +57,8 @@ async def api_antik_dil_ceviri(file: UploadFile = File(...)):
             "Bu görselde yer alan antik yazıları, sembolik harfleri tespit et. "
             "Hangi dilde/alfabede yazıldığını belirt ve Türkçe çevirisini/anlamını yap."
         )
-        # Sistem talimatını buraya da ekliyoruz
         tam_istek = f"{SISTEM_TALIMATI}\n\nİstek: {istek}"
-        response = model.generate_content([tam_istek, img])
+        response = client.generate_content([tam_istek, img])
         
         return {"durum": "basarili", "sonuc": response.text}
     except Exception as e:
@@ -74,11 +73,10 @@ async def api_uydu_analizi(file: UploadFile = File(...)):
         istek = (
             "Bu bir uydu/harita görüntüsüdür. Arazi üzerindeki belirgin coğrafi yapıları, "
             "höyük, tümülüs benzeri tarihi olabilecek tepe formasyonlarını veya eski yol yataklarını "
-            "bilimsel ve jeolojik olarak analiz et. Kesinlikle kazı tavsiyesi verme."
+            "bilimsel and jeolojik olarak analiz et. Kesinlikle kazı tavsiyesi verme."
         )
-        # Sistem talimatını buraya da ekliyoruz
         tam_istek = f"{SISTEM_TALIMATI}\n\nİstek: {istek}"
-        response = model.generate_content([tam_istek, img])
+        response = client.generate_content([tam_istek, img])
         
         return {"durum": "basarili", "sonuc": response.text}
     except Exception as e:
@@ -96,6 +94,5 @@ async def api_harita_goster(enlem: float, boylam: float):
 def ana_sayfa():
     return {"mesaj": "Arkeolojik İşaret Analiz API'si Aktif!"}
 
-# --- SUNUCUYU BAŞLATMA ---
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
