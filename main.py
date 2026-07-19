@@ -4,17 +4,18 @@ import PIL.Image
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException
 import uvicorn
 
-# 1. API Anahtarı Yapılandırması
-api_key = os.environ.get("GEMINI_API_KEY")
-if not api_key:
-    api_key = "SENIN_GEMINI_API_KEY_BURAYA_GELECEK"
+# 1. API Anahtarı Yapılandırması (Render Ortam Değişkenlerini Zorla Okur)
+api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
 
-# Yeni nesil kararlı istemci başlangıcı (Otomatik olarak güncel v1 sürümünü kullanır)
+if not api_key or "BURAYA" in api_key:
+    raise RuntimeError("Kritik Hata: Render üzerinde geçerli bir API anahtarı bulunamadı!")
+
+# Yeni nesil kararlı istemci başlangıcı
 client = genai.Client(api_key=api_key)
 
 # Sabit Yasal Uyarı Metnimiz
 SISTEM_TALIMATI = (
-    "Sen bir arkeoloji ve antik sembol uzmanısın. Kullanıcının gönderdiği görselleri bilimsel, "
+    "Sen bir archaeology ve antik sembol uzmanısın. Kullanıcının gönderdiği görselleri bilimsel, "
     "tarihi ve akademik olarak tanımla. Kesinlikle defineciliği, kazı yapmayı veya hazine aramayı "
     "teşvik etme. Her cevabının sonuna mutlaka şu yasal uyarıyı ekle:\n"
     "'UYARI: Bu görselin define veya hazine ile bir ilgisi olamaz. Tarihi eserlere zarar vermek suçtur, "
