@@ -34,9 +34,9 @@ async def api_isaret_analizi(file: UploadFile = File(...), soru: str = Form("Bu 
         img = PIL.Image.open(file.file)
         tam_istek = f"{SISTEM_TALIMATI}\n\nKullanıcı Sorusu: {soru}"
         
-        # Yeni kütüphane standardında içerik üretimi
+        # Yeni SDK'nın tam model yolunu tanıyabilmesi için models/ öneki eklendi
         response = client.models.generate_content(
-            model='gemini-1.5-flash',
+            model='models/gemini-1.5-flash',
             contents=[img, tam_istek]
         )
         return {"durum": "basarili", "sonuc": response.text}
@@ -56,7 +56,7 @@ async def api_antik_dil_ceviri(file: UploadFile = File(...)):
         tam_istek = f"{SISTEM_TALIMATI}\n\nİstek: {istek}"
         
         response = client.models.generate_content(
-            model='gemini-1.5-flash',
+            model='models/gemini-1.5-flash',
             contents=[img, tam_istek]
         )
         return {"durum": "basarili", "sonuc": response.text}
@@ -77,7 +77,7 @@ async def api_uydu_analizi(file: UploadFile = File(...)):
         tam_istek = f"{SISTEM_TALIMATI}\n\nİstek: {istek}"
         
         response = client.models.generate_content(
-            model='gemini-1.5-flash',
+            model='models/gemini-1.5-flash',
             contents=[img, tam_istek]
         )
         return {"durum": "basarili", "sonuc": response.text}
