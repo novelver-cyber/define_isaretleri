@@ -34,9 +34,9 @@ async def api_isaret_analizi(file: UploadFile = File(...), soru: str = Form("Bu 
         img = PIL.Image.open(file.file)
         tam_istek = f"{SISTEM_TALIMATI}\n\nKullanıcı Sorusu: {soru}"
         
-        # En güncel v1 API uyumlu kararlı model
+        # Kararlı ve güncel multimodal model
         response = client.models.generate_content(
-            model='gemini-2.5-flash',
+            model='gemini-2.0-flash',
             contents=[img, tam_istek]
         )
         return {"durum": "basarili", "sonuc": response.text}
@@ -51,12 +51,12 @@ async def api_antik_dil_ceviri(file: UploadFile = File(...)):
         img = PIL.Image.open(file.file)
         istek = (
             "Bu görselde yer alan antik yazıları, sembolik harfleri tespit et. "
-            "Hangi dilde/alfabede yazıldığını belirt và Türkçe çevirisini/anlamını yap."
+            "Hangi dilde/alfabede yazıldığını belirt ve Türkçe çevirisini/anlamını yap."
         )
         tam_istek = f"{SISTEM_TALIMATI}\n\nİstek: {istek}"
         
         response = client.models.generate_content(
-            model='gemini-2.5-flash',
+            model='gemini-2.0-flash',
             contents=[img, tam_istek]
         )
         return {"durum": "basarili", "sonuc": response.text}
@@ -77,7 +77,7 @@ async def api_uydu_analizi(file: UploadFile = File(...)):
         tam_istek = f"{SISTEM_TALIMATI}\n\nİstek: {istek}"
         
         response = client.models.generate_content(
-            model='gemini-2.5-flash',
+            model='gemini-2.0-flash',
             contents=[img, tam_istek]
         )
         return {"durum": "basarili", "sonuc": response.text}
